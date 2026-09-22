@@ -1,0 +1,75 @@
+CampusGuard Observer and State Design Decisions
+
+State pattern:
+Incident is the State context.
+It owns exactly one IncidentState through std::unique_ptr<IncidentState>, so the current lifecycle state is destroyed automatically when the incident changes state or is destroyed.
+
+The implemented lifecycle is:
+    Reported --Dispatch--> Dispatched --BeginResponse--> In Progress --Resolve--> Resolved
+    Reported --Cancel--> Cancelled
+    Dispatched --Cancel--> Cancelled
+
+Resolved and Cancelled are terminal states. Invalid actions return false and print a clear reason.
+For example, an incident cannot be dispatched after it is resolved.
+State classes validate lifecycle actions only: they do not send instructions to teams or manipulate access-control hardware.
+
+The classes are:
+    IncidentState: abstract State interface (handle, name).
+    ReportedState, DispatchedState, InProgressState, ResolvedState, and CancelledState: concrete State classes.
+    Incident: context that delegates a requested IncidentAction to its current State.
+
+Observer pattern:
+
+Incident also inherits Subject. It keeps non-owning IncidentObserver* registrations.
+attach rejects duplicates, detach removes registrations, and notify uses a snapshot so an observer may detach itself safely during an update.
+
+Observers are not owned by Incident, because a long-lived observer can observe several incidents.
+The application composition root must keep observers alive longer than the incidents they observe, or detach them before destruction.
+
+The observer update is:
+    void update(const Incident& incident, IncidentUpdateType updateType);
+A mediator can now safely react to updates from many incidents instead of holding a raw pointer to one incident state.
+
+Implemented observers:
+    OperatorDashboard: prints a concise current operational view.
+    IncidentAuditLog: retains an in-memory audit entry for every lifecycle change.
+    ExternalAgencyNotifier: escalates critical state changes to an external emergency service.
+    EmergencyResponseMediator: the one operational observer. It translates a lifecycle change into instructions for response colleagues.
+
+Observer and Mediator boundaries:
+
+The mediator is intentionally an IncidentObserver; this does not replace the Mediator pattern.
+
+    Incident state change -> Incident notifies observers -> Mediator coordinates colleagues
+    Response component event -> Mediator::notify -> Mediator coordinates colleagues
+
+Response components such as SecurityTeam, MedicalTeam, AlertService, and AccessControl do not observe Incident directly.
+If they did, each team would need to interpret every lifecycle change and would become coupled to incident-management rules.
+The mediator remains the only place that turns an incident lifecycle update into cross-team instructions.
+
+The existing ResponseMediator::notify path remains in place for component events such as UnitArrived and AreaSecured.
+This gives the system both required coordination paths without making the patterns duplicates.
+
+ExternalAgencyNotifier depends only on ExternalEmergencyService, the CampusGuard-facing target interface.
+LegacyEmergencyAdapter implements that interface and converts the domain request to the incompatible legacy call:
+    notifyAgency(incident data) -> submitEmergencyReport(cityZoneCode, rawPayload, priorityCode)
+
+The adapter converts area IDs to city-zone codes, creates a legacy text payload, and maps incident severity to a legacy priority code. The notifier only escalates critical incidents when their state changes or they are resolved, avoiding unnecessary external notifications.
+
+Ownership summary:
+    Relationship | Ownership decision
+    IncidentRegistry -> Incident | Owns incidents with std::unique_ptr.
+    Incident -> IncidentState | Owns its one current state with std::unique_ptr.
+    Subject -> IncidentObserver | Non-owning registrations; explicit detach available.
+    EmergencyResponseMediator -> response components | Non-owning pointers; they are supplied by the application composition root.
+    LegacyEmergencyAdapter -> LegacyCityEmergencySystem | Non-owning reference; the external system has a longer lifetime.
+    ExternalAgencyNotifier -> ExternalEmergencyService | Non-owning pointer to the target interface.
+
+Current main coverage: (AI generated because I don't want to bother building the whole thing lol sorry :)
+
+main.cpp creates a critical fire incident and a high-severity medical incident.
+The fire follows the full path to resolution, exercises the observer-mediated coordination and legacy adapter escalation, then attempts an invalid dispatch.
+The medical incident is dispatched and cancelled. The existing low-level component-event Mediator demonstration remains afterwards with a separate test event ID, so it does not falsely operate on either lifecycle scenario.
+
+The next Command implementation should ask the incident to perform its lifecycle action before it invokes operational work.
+For example, DispatchUnitCommand can request IncidentAction::Dispatch; only if it succeeds should the mediator coordinate the response.

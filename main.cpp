@@ -3,6 +3,12 @@
 #include "MedicalTeam.h"
 #include "AlertService.h"
 #include "AccessControl.h"
+#include "IncidentRegistry.h"
+#include "OperatorDashboard.h"
+#include "IncidentAuditLog.h"
+#include "ExternalAgencyNotifier.h"
+#include "LegacyEmergencyAdapter.h"
+#include "LegacyCityEmergencySystem.h"
 
 #include <iostream>
 
@@ -18,6 +24,38 @@ int main() {
 
     mediator.setColleagues(&security, &medical, &alert, &access);
 
+    std::cout << "\n===== Incident State + Observer Demo =====\n";
+    IncidentRegistry registry;
+    OperatorDashboard dashboard;
+    IncidentAuditLog auditLog;
+    LegacyCityEmergencySystem legacyCitySystem;
+    LegacyEmergencyAdapter cityAdapter(legacyCitySystem);
+    ExternalAgencyNotifier agencyNotifier(&cityAdapter);
+
+    Incident& libraryFire = registry.createIncident(
+        IncidentType::Fire, IncidentSeverity::Critical, 12);
+    libraryFire.attach(&mediator);
+    libraryFire.attach(&dashboard);
+    libraryFire.attach(&auditLog);
+    libraryFire.attach(&agencyNotifier);
+
+    std::cout << "\n--- Incident 100: lifecycle changes notify observers ---\n";
+    libraryFire.request(IncidentAction::Dispatch);
+    libraryFire.request(IncidentAction::BeginResponse);
+    libraryFire.request(IncidentAction::Resolve);
+    libraryFire.request(IncidentAction::Dispatch); // intentional invalid case
+
+    Incident& clinicMedical = registry.createIncident(
+        IncidentType::Medical, IncidentSeverity::High, 7);
+    clinicMedical.attach(&mediator);
+    clinicMedical.attach(&dashboard);
+    clinicMedical.attach(&auditLog);
+    clinicMedical.attach(&agencyNotifier);
+
+    std::cout << "\n--- Incident 101: cancellation before response begins ---\n";
+    clinicMedical.request(IncidentAction::Dispatch);
+    clinicMedical.request(IncidentAction::Cancel);
+
     std::cout << "\n--- Colleague information ---\n";
     std::cout << security.getName() << " id=" << security.getId()
               << " status=" << static_cast<int>(security.getStatus()) << "\n";
@@ -28,29 +66,34 @@ int main() {
     std::cout << access.getName()   << " id=" << access.getId()
               << " status=" << static_cast<int>(access.getStatus())   << "\n";
 
+    // These retain the original low-level Mediator examples. They use an
+    // isolated event ID rather than pretending to operate on a cancelled
+    // lifecycle incident from the scenarios above.
+    const int mediatorDemoIncidentId = 999;
+
     std::cout << "\n--- Test 1: AreaSecured (Security -> Medical + Alert) ---\n";
-    security.reportAreaSecured(101);
+    security.reportAreaSecured(mediatorDemoIncidentId);
 
     std::cout << "\n--- Test 2: NeedBackup (Security -> Alert + Security) ---\n";
-    security.requestBackup(101);
+    security.requestBackup(mediatorDemoIncidentId);
 
     std::cout << "\n--- Test 3: UnitArrived (Medical -> Alert + Access) ---\n";
-    medical.reportUnitArrived(101);
+    medical.reportUnitArrived(mediatorDemoIncidentId);
 
     std::cout << "\n--- Test 4: TaskComplete (AccessControl -> everyone) ---\n";
-    access.unlockArea(12, 101);
+    access.unlockArea(12, mediatorDemoIncidentId);
 
     std::cout << "\n--- Test 5: UnitArrived (Security -> Alert + Access) ---\n";
-    security.reportUnitArrived(101);
+    security.reportUnitArrived(mediatorDemoIncidentId);
 
     std::cout << "\n--- Test 6: TaskComplete (Alert -> everyone) ---\n";
-    alert.broadcast("Evacuation notice", 101);
+    alert.broadcast("Evacuation notice", mediatorDemoIncidentId);
 
     std::cout << "\n--- Test 7: TaskComplete (Medical -> everyone) ---\n";
-    medical.reportTaskComplete(101);
+    medical.reportTaskComplete(mediatorDemoIncidentId);
 
     std::cout << "\n--- Test 8: TaskComplete (Security -> everyone) ---\n";
-    security.reportTaskComplete(101);
+    security.reportTaskComplete(mediatorDemoIncidentId);
 
     std::cout << "\n--- Setter test ---\n";
     security.setStatus(ResponseStatus::Busy);
