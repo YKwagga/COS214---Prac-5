@@ -10,12 +10,24 @@ int cityZoneForArea(int areaId) {
 
 int priorityForSeverity(IncidentSeverity severity) {
     switch (severity) {
-        case IncidentSeverity::Critical: return 1;
-        case IncidentSeverity::High: return 2;
-        case IncidentSeverity::Medium: return 3;
-        case IncidentSeverity::Low: return 4;
+        case IncidentSeverity::Critical:
+            return 1;
+            break;
+        case IncidentSeverity::High:
+            return 2;
+            break;
+        case IncidentSeverity::Medium:
+            return 3;
+            break;
+        case IncidentSeverity::Low:
+            return 4;
+            break;
+        default:
+            return 4;
+            break;
     }
-    return 4;
+    //If it reaches the return something broke
+    return -1;
 }
 }
 
