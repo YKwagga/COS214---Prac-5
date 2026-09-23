@@ -36,6 +36,32 @@ public:
         notifyMediator(ComponentEventType::TaskComplete,
                        name + " task complete", incidentId);
     }
+
+    void reportDispatch(int incidentId) {
+        setStatus(ResponseStatus::Dispatched);
+        std::cout << "[" << name << " #" << id
+                << "] Dispatched to incident " << incidentId << "\n";
+        notifyMediator(ComponentEventType::UnitArrived,
+                    name + " dispatched", incidentId);
+    }
+
+    void assistEvacuation(int incidentId) {
+        setStatus(ResponseStatus::Busy);
+        std::cout << "[" << name << " #" << id
+                  << "] Assisting evacuation for incident "
+                  << incidentId << "\n";
+        notifyMediator(ComponentEventType::TaskComplete,
+                       name + " assisting evacuation", incidentId);
+    }
+
+    void standDownEvacuation(int incidentId) {
+        setStatus(ResponseStatus::Available);
+        std::cout << "[" << name << " #" << id
+                  << "] Stand down evacuation support for incident "
+                  << incidentId << "\n";
+        notifyMediator(ComponentEventType::TaskComplete,
+                       name + " stood down from evacuation", incidentId);
+    }
 };
 
 #endif

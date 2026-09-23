@@ -26,6 +26,15 @@ public:
         notifyMediator(ComponentEventType::TaskComplete,
                        name + " task complete", incidentId);
     }
+
+    void reportDispatch(int incidentId) {
+        setStatus(ResponseStatus::Dispatched);
+        std::cout << "[" << name << " #" << id
+                << "] Alert service dispatched for incident "
+                << incidentId << "\n";
+        notifyMediator(ComponentEventType::UnitArrived,
+                    name + " dispatched", incidentId);
+    }
 };
 
 #endif

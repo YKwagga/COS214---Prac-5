@@ -9,6 +9,11 @@
 #include "ExternalAgencyNotifier.h"
 #include "LegacyEmergencyAdapter.h"
 #include "LegacyCityEmergencySystem.h"
+#include "Command.h"
+#include "CommandInvoker.h"
+#include "IssueEvacuationCommand.h"
+#include "DispatchUnitCommand.h"
+#include "SecureAreaCommand.h"
 
 #include <iostream>
 
@@ -101,6 +106,43 @@ int main() {
     std::cout << "After setter: "
               << security.getName() << " status="
               << static_cast<int>(security.getStatus()) << "\n";
+
+    std::cout<<"\n=========COMMAND PATTERN TESTING=============="<<std::endl;
+    CommandInvoker invoker;
+
+    std::cout << "===== Dispatch Security =====\n";
+    DispatchUnitCommand dispatchSecurity(
+        mediator, ResponseUnitType::Security, 100);
+    invoker.execute(&dispatchSecurity);
+
+    std::cout << "\n===== Dispatch Medical =====\n";
+    DispatchUnitCommand dispatchMedical(
+        mediator, ResponseUnitType::Medical, 100);
+    invoker.execute(&dispatchMedical);
+
+    std::cout << "\n===== Secure Area 12 =====\n";
+    SecureAreaCommand secureArea(mediator, 12, 100);
+    invoker.execute(&secureArea);
+
+    std::cout << "\n===== Issue Evacuation =====\n";
+    IssueEvacuationCommand evacuate(
+        mediator, "Fire in library", 100);
+    invoker.execute(&evacuate);
+
+    std::cout << "\n===== Undo Evacuation =====\n";
+    invoker.undoLast();
+
+    std::cout << "\n===== Undo Secure Area =====\n";
+    invoker.undoLast();
+
+    std::cout << "\n===== Undo Dispatch Medical =====\n";
+    invoker.undoLast();
+
+    std::cout << "\n===== Undo Dispatch Security =====\n";
+    invoker.undoLast();
+
+    std::cout << "\n===== Undo with Empty History =====\n";
+    invoker.undoLast();
 
     std::cout << "\n===== Demo complete =====\n";
     return 0;

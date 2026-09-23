@@ -35,6 +35,33 @@ public:
         notifyMediator(ComponentEventType::TaskComplete,
                        name + " task complete", incidentId);
     }
+
+    void reportDispatch(int incidentId) {
+        setStatus(ResponseStatus::Dispatched);
+        std::cout << "[" << name << " #" << id
+                << "] Access control dispatched for incident "
+                << incidentId << "\n";
+        notifyMediator(ComponentEventType::UnitArrived,
+                    name + " dispatched", incidentId);
+    }
+
+    void openEvacuationRoutes(int incidentId) {
+        setStatus(ResponseStatus::Busy);
+        std::cout << "[" << name << " #" << id
+                  << "] Opening evacuation routes for incident "
+                  << incidentId << "\n";
+        notifyMediator(ComponentEventType::TaskComplete,
+                       name + " opened evacuation routes", incidentId);
+    }
+
+    void restoreNormalAccess(int incidentId) {
+        setStatus(ResponseStatus::Available);
+        std::cout << "[" << name << " #" << id
+                  << "] Restoring normal access for incident "
+                  << incidentId << "\n";
+        notifyMediator(ComponentEventType::TaskComplete,
+                       name + " restored normal access", incidentId);
+    }
 };
 
 #endif

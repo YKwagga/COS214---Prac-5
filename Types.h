@@ -10,6 +10,13 @@ enum class ComponentEventType {
     TaskComplete
 };
 
+enum class ResponseUnitType{
+    Security,
+    Medical,
+    Access,
+    Alert
+};
+
 enum class ResponseStatus {
     Available,
     Dispatched,
@@ -76,6 +83,16 @@ inline const char* toString(IncidentAction action) {
         case IncidentAction::Cancel: return "cancel";
     }
     return "perform action";
+}
+
+inline const char* toString(ResponseUnitType t) {
+    switch (t) {
+        case ResponseUnitType::Security: return "Security";
+        case ResponseUnitType::Medical:  return "Medical";
+        case ResponseUnitType::Alert:    return "Alert";
+        case ResponseUnitType::Access:   return "Access";
+    }
+    return "Unknown";
 }
 
 struct ComponentEvent {

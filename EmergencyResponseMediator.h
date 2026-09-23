@@ -6,6 +6,10 @@
 #include "IncidentObserver.h"
 #include "Incident.h"
 #include <iostream>
+#include "SecurityTeam.h"
+#include "MedicalTeam.h"
+#include "AccessControl.h"
+#include "AlertService.h"
 
 class EmergencyResponseMediator : public ResponseMediator,
                                  public IncidentObserver {
@@ -14,10 +18,10 @@ public:
         : security(nullptr), medical(nullptr),
           alert(nullptr), access(nullptr) {}
 
-    void setColleagues(ResponseComponent* security,
-                       ResponseComponent* medical,
-                       ResponseComponent* alert,
-                       ResponseComponent* access) {
+    void setColleagues(SecurityTeam* security,
+                       MedicalTeam* medical,
+                       AlertService* alert,
+                       AccessControl* access) {
         this->security = security;
         this->medical  = medical;
         this->alert    = alert;
@@ -131,6 +135,84 @@ public:
         }
     }
 
+    //Command functions
+    void dispatchUnit(int incidentId, ResponseUnitType unit) {
+        std::cout << "[Mediator/Receiver] dispatchUnit: "
+                  << toString(unit) << " -> incident "
+                  << incidentId << "\n";
+
+        switch (unit) {
+            case ResponseUnitType::Security:
+                if (security) security->reportDispatch(incidentId);
+                break;
+            case ResponseUnitType::Medical:
+                if (medical)  medical->reportDispatch(incidentId);
+                break;
+            case ResponseUnitType::Alert:
+                if (alert)    alert->reportDispatch(incidentId);
+                break;
+            case ResponseUnitType::Access:
+                if (access)   access->reportDispatch(incidentId);
+                break;
+        }
+    }
+
+    void cancelDispatch(int incidentId, ResponseUnitType unit) {
+        std::cout << "[Mediator/Receiver] cancelDispatch: "
+                  << toString(unit) << " for incident "
+                  << incidentId << "\n";
+
+        switch (unit) {
+            case ResponseUnitType::Security:
+                if (security) security->reportTaskComplete(incidentId);
+                break;
+            case ResponseUnitType::Medical:
+                if (medical)  medical->reportTaskComplete(incidentId);
+                break;
+            case ResponseUnitType::Alert:
+                if (alert)    alert->reportTaskComplete(incidentId);
+                break;
+            case ResponseUnitType::Access:
+                if (access)   access->reportTaskComplete(incidentId);
+                break;
+        }
+    }
+
+    void secureArea(int areaId, int incidentId) {
+        std::cout << "[Mediator/Receiver] secureArea: area " << areaId
+                  << " for incident " << incidentId << "\n";
+
+        if (security) security->reportAreaSecured(incidentId);
+        if (access)   access->lockArea(areaId, incidentId);
+    }
+
+    void cancelSecureArea(int areaId, int incidentId) {
+        std::cout << "[Mediator/Receiver] cancelSecureArea: area " << areaId
+                  << " for incident " << incidentId << "\n";
+
+        if (access)   access->unlockArea(areaId, incidentId);
+        if (security) security->reportTaskComplete(incidentId);
+    }
+
+    void issueEvacuation(const std::string& message, int incidentId) {
+        std::cout << "[Mediator/Receiver] issueEvacuation for incident "
+                  << incidentId << ": " << message << "\n";
+
+        if (alert)    alert->broadcast(message, incidentId);
+        if (security) security->assistEvacuation(incidentId);
+        if (access)   access->openEvacuationRoutes(incidentId);
+    }
+
+    void cancelEvacuation(int incidentId) {
+        std::cout << "[Mediator/Receiver] cancelEvacuation for incident "
+                  << incidentId << "\n";
+
+        if (alert)    alert->broadcast("All clear", incidentId);
+        if (security) security->standDownEvacuation(incidentId);
+        if (access)   access->restoreNormalAccess(incidentId);
+    }
+
+    
 private:
     void instructAll(const std::string& instruction) {
         if (security) security->receiveInstruction(instruction);
@@ -139,10 +221,41 @@ private:
         if (access) access->receiveInstruction(instruction);
     }
 
-    ResponseComponent* security;
-    ResponseComponent* medical;
-    ResponseComponent* alert;
-    ResponseComponent* access;
+        ResponseComponent* findUnit(const std::string& unitName) {
+        if (security &&
+            (unitName == security->getName() ||
+             unitName == "Security" ||
+             unitName == "SecurityTeam")) {
+            return security;
+        }
+
+        if (medical &&
+            (unitName == medical->getName() ||
+             unitName == "Medical" ||
+             unitName == "MedicalTeam")) {
+            return medical;
+        }
+
+        if (alert &&
+            (unitName == alert->getName() ||
+             unitName == "Alert" ||
+             unitName == "AlertService")) {
+            return alert;
+        }
+
+        if (access &&
+            (unitName == access->getName() ||
+             unitName == "Access" ||
+             unitName == "AccessControl")) {
+            return access;
+        }
+
+        return nullptr;
+    }
+    SecurityTeam* security;
+    MedicalTeam* medical;
+    AlertService* alert;
+    AccessControl* access;
 };
 
 #endif
