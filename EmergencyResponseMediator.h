@@ -37,9 +37,7 @@ public:
         switch (event.type) {
             case ComponentEventType::AreaSecured:
                 if (medical && medical != sender)
-                    medical->receiveInstruction(
-                        "Area secured. Safe to enter incident "
-                        + std::to_string(event.incidentId));
+                    medical->reportUnitArrived(event.incidentId);
                 if (alert && alert != sender)
                     alert->receiveInstruction(
                         "Broadcast area-secured notice for incident "
