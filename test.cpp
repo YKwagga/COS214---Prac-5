@@ -1,9 +1,16 @@
 #include "ExternalEmergencyService.h"
 #include "LegacyCityEmergencySystem.h"
 #include "LegacyEmergencyAdapter.h"
-#include "Incident.h"
 #include "Types.h"
 #include<iostream>
+
+//Managing incidents
+#include "Incident.h"
+#include "IncidentObserver.h"
+#include "EmergencyResponseMediator.h"
+#include "IncidentAuditLog.h"
+#include "ExternalAgencyNotifier.h"
+
 int main(){
     //So the two types, cool
     IncidentType incidentType = IncidentType::Fire;
@@ -14,6 +21,37 @@ int main(){
     ExternalEmergencyService* service = new LegacyEmergencyAdapter(*system);
 
     service->notifyAgency(0,incidentType,severity,18,"wee");
+    //Incident created
+    Incident* incident = new Incident(0,incidentType,severity,18);
+
+    //Observer
+    IncidentObserver* observer = new EmergencyResponseMediator();
+    IncidentObserver* audit = new IncidentAuditLog();
+
+    //Finally for the external agency
+    IncidentObserver* external = new ExternalAgencyNotifier(service);
+
+    incident->attach(observer);
+    incident->attach(audit);
+    incident->attach(external);
+
+
+    incident->request(IncidentAction::Dispatch);
+    incident->detach(audit);
+    incident->request(IncidentAction::BeginResponse);
+
+
+    //deletes pointers
+    delete system;
+    delete service;
+    delete incident;
+    delete observer;
+    delete audit;
+    delete external;
+
+
+
+
 
 
 }
