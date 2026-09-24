@@ -21,7 +21,5 @@ void ExternalAgencyNotifier::update(const Incident& incident,
 
     std::cout << "[External notifier] Escalating incident "
               << incident.getId() << " to the city agency\n";
-    service->notifyAgency(incident.getId(), incident.getType(),
-                          incident.getSeverity(), incident.getAreaId(),
-                          incident.getStateName());
+    service->notifyAgency(&incident);
 }

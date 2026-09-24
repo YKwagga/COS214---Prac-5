@@ -3,17 +3,18 @@
 
 #include <iostream>
 
-// Represents an incompatible external API. CampusGuard should not expose this
-// C-style signature to its internal services.
 class LegacyCityEmergencySystem {
 public:
-    void submitEmergencyReport(int cityZoneCode,
-                               const char* rawPayload,
-                               int priorityCode) {
-        std::cout << "[Legacy City System] zone=" << cityZoneCode
-                  << ", priority=" << priorityCode
-                  << ", payload=" << rawPayload << "\n";
+    void submitEmergencyReport(int cityZoneCode, const std::string details, int priorityCode) {
+        std::cout << "[Legacy City System]:" << "\n" <<" Zone = " << cityZoneCode << "\n" << "Priority = " << priorityCode << "\n" << "Details = " << details << std::endl;
+        /*Example output:
+         * [Legacy City System]
+         * Zone =
+         * Priority =
+         * Details =
+         */
+
     }
 };
 
-#endif
+#endif //LEGACY_CITY_EMERGENCY_SYSTEM_H

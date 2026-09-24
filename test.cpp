@@ -20,9 +20,11 @@ int main(){
 
     ExternalEmergencyService* service = new LegacyEmergencyAdapter(*system);
 
-    service->notifyAgency(0,incidentType,severity,18,"wee");
+
     //Incident created
     Incident* incident = new Incident(0,incidentType,severity,18);
+
+    service->notifyAgency(incident);
 
     //Observer
     IncidentObserver* observer = new EmergencyResponseMediator();

@@ -2,16 +2,13 @@
 #define EXTERNAL_EMERGENCY_SERVICE_H
 
 #include "Types.h"
+#include "Incident.h"
 
 class ExternalEmergencyService {
 public:
     virtual ~ExternalEmergencyService() {}
 
-    virtual void notifyAgency(int incidentId,
-                              IncidentType type,
-                              IncidentSeverity severity,
-                              int areaId,
-                              const char* stateName) = 0;
+    virtual void notifyAgency(const Incident* incident) = 0;
 };
 
-#endif
+#endif //EXTERNAL_EMERGENCY_SERVICE_H
