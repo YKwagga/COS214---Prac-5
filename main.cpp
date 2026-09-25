@@ -14,8 +14,23 @@
 #include "IssueEvacuationCommand.h"
 #include "DispatchUnitCommand.h"
 #include "SecureAreaCommand.h"
+#include "EmergencyResponseFacade.h"
 
 #include <iostream>
+
+void runFacadeScenarioTests(EmergencyResponseFacade& facade) {
+    std::cout << "\n===== Facade Scenario Tests =====\n";
+
+    const int evacuationId = facade.startEvacuation(
+        15, "Fire reported in the science building. Evacuate the area.");
+    std::cout << "Evacuation scenario created incident " << evacuationId << "\n";
+
+    const int securityId = facade.respondToSecurityThreat(8);
+    std::cout << "Security scenario created incident " << securityId << "\n";
+
+    const int medicalId = facade.respondToMedicalEmergency(5);
+    std::cout << "Medical scenario created incident " << medicalId << "\n";
+}
 
 int main() {
     std::cout << "===== CampusGuard Mediator Demo =====\n";
@@ -143,6 +158,10 @@ int main() {
 
     std::cout << "\n===== Undo with Empty History =====\n";
     invoker.undoLast();
+
+    EmergencyResponseFacade facade(
+        registry, mediator, dashboard, auditLog, agencyNotifier);
+    runFacadeScenarioTests(facade);
 
     std::cout << "\n===== Demo complete =====\n";
     return 0;
