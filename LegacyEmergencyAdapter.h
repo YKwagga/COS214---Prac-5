@@ -2,22 +2,23 @@
 #define LEGACY_EMERGENCY_ADAPTER_H
 
 #include "ExternalEmergencyService.h"
+#include "Incident.h"
 
 class LegacyCityEmergencySystem;
 
+//Inherits from target/ internal interface
 class LegacyEmergencyAdapter : public ExternalEmergencyService {
-public:
-    explicit LegacyEmergencyAdapter(LegacyCityEmergencySystem& legacySystem)
-        : legacySystem(legacySystem) {}
+    private:
+        //LegacySystem object
+        LegacyCityEmergencySystem& legacySystem;
 
-    void notifyAgency(int incidentId,
-                      IncidentType type,
-                      IncidentSeverity severity,
-                      int areaId,
-                      const char* stateName) override;
+    public:
+        //explicit declaration, won't automaticallly create legacy system
+        explicit LegacyEmergencyAdapter(LegacyCityEmergencySystem& legacySystem): legacySystem(legacySystem) {}
 
-private:
-    LegacyCityEmergencySystem& legacySystem; // non-owning adaptee
+        void notifyAgency(const Incident* incident) override;
+
+
 };
 
-#endif
+#endif //EXTERNALEMERGENCYADAPTER_H
