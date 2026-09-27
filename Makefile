@@ -1,12 +1,17 @@
-CXX = g++
-CXXFLAGS = -std=c++11 -Wall -Wextra -pedantic
-TARGET = campusguard
-SOURCES = $(wildcard *.cpp)
+CXX      = g++
+CXXFLAGS = -std=c++11 -g -O0 -Wall -Wextra -pedantic
 
-$(TARGET): $(SOURCES)
-	$(CXX) $(CXXFLAGS) $(SOURCES) -o $(TARGET)
+TARGET  = campusguard
+SOURCES = $(filter-out test.cpp,$(wildcard *.cpp))
+OBJECTS = $(SOURCES:.cpp=.o)
+
+$(TARGET): $(OBJECTS)
+	$(CXX) $(CXXFLAGS) $(OBJECTS) -o $(TARGET)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	-del /Q $(TARGET).exe $(TARGET) 2>NUL || exit 0
+	rm -f $(OBJECTS) $(TARGET)
 
-.PHONY: clean
+.PHONY: all clean
