@@ -25,7 +25,8 @@ void Incident::transitionTo(std::unique_ptr<IncidentState> nextState,
         return;
     }
 
-    const std::string oldState(state->name());
+    IncidentState* previousState = state.release();
+    const std::string oldState(previousState->name());
     state = std::move(nextState);
 
     std::cout << "[Incident " << id << "] " << oldState
