@@ -80,3 +80,29 @@ int EmergencyResponseFacade::respondToMedicalEmergency(int areaId) {
     invoker.execute(&dispatchMedical);
     return incident.getId();
 }
+
+int EmergencyResponseFacade::simulateCancelledSecurityResponse(int areaId) {
+    std::cout << "\n===== Cancelled Security Response Scenario =====\n";
+    Incident& incident = createObservedIncident(
+        IncidentType::SecurityThreat, IncidentSeverity::High, areaId);
+
+    incident.request(IncidentAction::Dispatch);
+    incident.request(IncidentAction::BeginResponse);
+
+    CommandInvoker invoker;
+    DispatchUnitCommand dispatchSecurity(
+        mediator, ResponseUnitType::Security, incident.getId());
+    SecureAreaCommand secureArea(mediator, areaId, incident.getId());
+
+    invoker.execute(&dispatchSecurity);
+    invoker.execute(&secureArea);
+
+    std::cout << "[Scenario] Incident interrupted mid-response; cancelling and "
+                 "undoing completed work.\n";
+    incident.request(IncidentAction::Cancel);
+    while (invoker.hasHistory()) {
+        invoker.undoLast();
+    }
+
+    return incident.getId();
+}

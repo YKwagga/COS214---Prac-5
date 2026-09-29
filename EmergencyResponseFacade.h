@@ -19,6 +19,7 @@ public:
     int startEvacuation(int areaId, const std::string& message);
     int respondToSecurityThreat(int areaId);
     int respondToMedicalEmergency(int areaId);
+    int simulateCancelledSecurityResponse(int areaId);
 
 private:
     Incident& createObservedIncident(IncidentType type,

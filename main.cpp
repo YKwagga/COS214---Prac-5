@@ -30,6 +30,10 @@ void runFacadeScenarioTests(EmergencyResponseFacade& facade) {
 
     const int medicalId = facade.respondToMedicalEmergency(5);
     std::cout << "Medical scenario created incident " << medicalId << "\n";
+
+    const int cancelledId = facade.simulateCancelledSecurityResponse(11);
+    std::cout << "Cancelled response scenario created incident "
+              << cancelledId << "\n";
 }
 
 int main() {
